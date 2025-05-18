@@ -9,6 +9,6 @@ marginHears.hears('💰 Маржа', async (ctx) => {
         'SELECT `value` FROM settings WHERE `key` = ?',
         ['margin']
     )
-    await ctx.reply(`💰 Текущая маржа: ${-rows[0]?.value ?? 0}%`, {parse_mode: 'HTML', 
+    await ctx.reply(`💰 Текущая маржа: ${rows[0]?.value ?? 0}%`, {parse_mode: 'HTML', 
         reply_markup: new InlineKeyboard().text('Изменить маржу', 'change_margin')})
 })

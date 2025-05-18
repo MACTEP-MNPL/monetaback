@@ -6,13 +6,30 @@ import {createFeaTypeApplication} from './createFeaTypeApplication.js'
 import {createSwiftTypeApplication} from './createSwiftTypeApplication.js'
 import {createCashTypeApplication} from './createCashTypeApplication.js'
 import { db } from '../index.js';
+import { createApi } from '../api/createApi.js';
 
 dotenv.config();
 
 export const app = express()
 
+// Initialize API
+const api = new createApi();
+
+// Base exchange rates
+const baseRates = {
+    'USDT/RUB': {
+        "askPrice": 81.83,
+        "bidPrice": 81.81
+    },
+}
+
+// Constants for pricing
+const COST_PRICE_COMMISSION = 0.25; // 25 копеек комиссия
+const MARGIN_TIER_50K_PLUS = 1.5;   // +1.5 рубля для 50k+
+const MARGIN_TIER_20K_50K = 2.0;    // +2 рубля для 20-50k
+
 const corsOptions = {
-    origin: ['http://localhost:80', 'https://localhost:443', 'http://localhost:5173'],
+    origin: ['http://localhost:80', 'https://localhost:443', 'http://localhost:5173', 'http://localhost:3000'],
     //origin: ['https://monetazone.com'],
     methods: ['POST', 'GET'],
     optionsSuccessStatus: 200
@@ -20,6 +37,76 @@ const corsOptions = {
 
 app.use(cors(corsOptions))
 app.use(express.json())
+
+app.get('/exchange-rate', async (req, res) => {
+    try {
+        const { from, to } = req.query;
+
+        // Validate currencies
+        if (!from || !to) {
+            return res.status(400).json({
+                success: false,
+                message: 'Both "from" and "to" currencies are required'
+            });
+        }
+
+        // Check if we're dealing with supported currencies
+        if (!['USDT', 'RUB'].includes(from) || !['USDT', 'RUB'].includes(to) || from === to) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid currency pair'
+            });
+        }
+
+        // Get margin from database
+        const [marginRows] = await db.execute(
+            'SELECT value FROM settings WHERE `key` = ?',
+            ['margin']
+        );
+        const marginPercent = parseFloat(marginRows[0]?.value ?? 0);
+
+        // Get current Rapira rates
+        const rapiraRates = api.getRates();
+        let baseRate, costPrice, tier_50k_plus, tier_10k_50k;
+
+        if (from === 'USDT' && to === 'RUB') {
+            // Selling USDT for RUB (client sells USDT, we buy)
+            baseRate = rapiraRates.sell; // Use Rapira's bid price
+            costPrice = baseRate - COST_PRICE_COMMISSION;
+            const marginAmount = (baseRate * marginPercent) / 100;
+            tier_50k_plus = costPrice - MARGIN_TIER_50K_PLUS - marginAmount;
+            tier_10k_50k = costPrice - MARGIN_TIER_20K_50K - marginAmount;
+        } else {
+            // Buying USDT with RUB (client buys USDT, we sell)
+            baseRate = rapiraRates.buy; // Use Rapira's ask price
+            costPrice = baseRate + COST_PRICE_COMMISSION;
+            const marginAmount = (baseRate * marginPercent) / 100;
+            tier_50k_plus = costPrice + MARGIN_TIER_50K_PLUS + marginAmount;
+            tier_10k_50k = costPrice + MARGIN_TIER_20K_50K + marginAmount;
+        }
+
+        res.status(200).json({
+            success: true,
+            data: {
+                from,
+                to,
+                rates: {
+                    base_rate: baseRate,
+                    cost_price: costPrice,
+                    tier_10k_50k: tier_10k_50k,
+                    tier_50k_plus: tier_50k_plus
+                },
+                timestamp: rapiraRates.timestamp
+            }
+        });
+    } catch (error) {
+        console.error('Error in exchange rate endpoint:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    }
+});
 
 app.post('/new', async (req, res) => {
     try {

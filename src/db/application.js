@@ -93,17 +93,19 @@ export const getAllInProgressApplications = async () => {
 }
 
 export const getAllComplitedTodayApplications = async () => {
-
     const [ids] = await db.execute(
         'SELECT application_id FROM application_timestamps WHERE completed_at >= ?',
         [new Date(new Date().setDate(new Date().getDate() - 1))]
     )
 
+    if (ids.length === 0) {
+        return []
+    }
+
     const [rows] = await db.execute(
         `SELECT * FROM applications WHERE status = ? AND id IN (${ids.map(() => '?').join(',')})`,
         ['completed', ...ids.map(id => id.application_id)]
     )
-
 
     return rows
 }
@@ -112,6 +114,14 @@ export const getManagerInProgressApplications = async (managerId) => {
     const [rows] = await db.execute(
         'SELECT * FROM applications WHERE status = ? AND manager_tg_id = ?',
         ['in_progress', managerId]
+    )
+    return rows
+}
+
+export const getAllAdmins = async () => {
+    const [rows] = await db.execute(
+        'SELECT id, username, role FROM users WHERE role IN (?, ?)',
+        ['manager', 'owner']
     )
     return rows
 }

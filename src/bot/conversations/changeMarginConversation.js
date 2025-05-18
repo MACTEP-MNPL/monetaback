@@ -10,7 +10,7 @@ export const changeMarginConversation = async (conversation, ctx) => {
         return
     }
 
-    await conversation.external(() => db.execute('UPDATE settings SET value = ? WHERE `key` = ?', [-margin, `margin`]))
+    await conversation.external(() => db.execute('UPDATE settings SET value = ? WHERE `key` = ?', [margin, `margin`]))
     await ctx.reply('Маржа успешно изменена!')
 }
 

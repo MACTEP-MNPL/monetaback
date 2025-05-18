@@ -6,6 +6,7 @@ import {adminKeyboard} from "../keyboards/adminKeyboard.js"
 import {isAdmin} from "../utils/isAdmin.js"
 import {ownerKeyboard} from "../keyboards/ownerKeyboard.js"
 import {isOwner} from "../utils/isOwner.js"
+import {getAllAdmins} from "../../db/application.js"
 
 export const commands = new Composer()
 
@@ -24,7 +25,27 @@ commands.command('owner', async (ctx) => {
         return 
     }
 
-    await ctx.reply("😎 Панель владельца", {reply_markup: ownerKeyboard})
+    const admins = await getAllAdmins()
+    
+    let message = "👑 Все администраторы:\n\n"
+    
+    // Group admins by role
+    const owners = admins.filter(admin => admin.role === 'owner')
+    const managers = admins.filter(admin => admin.role === 'manager')
+    
+    // Add owners
+    message += "🌟 Владельцы:\n"
+    owners.forEach(owner => {
+        message += `└ @${owner.username}\n`
+    })
+    
+    // Add managers
+    message += "\n👔 Менеджеры:\n"
+    managers.forEach(manager => {
+        message += `└ @${manager.username}\n`
+    })
+
+    await ctx.reply(message, {reply_markup: ownerKeyboard})
 })
 
 commands.command('help', async (ctx) => {

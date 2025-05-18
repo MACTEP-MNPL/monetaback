@@ -6,11 +6,6 @@ import { getApplicationMessage } from "../messages/messages.js"
 const getMyInProgressApps = async (ctx, buttons) => {
     const applications = await getManagerInProgressApplications(ctx.from.id)
 
-    if (applications.length === 0) {
-        await ctx.reply("У вас нет заявок в работе.")
-        return
-    }
-
     for (const application of applications) {
         const type = getRussianApplicatoinType(application.type)
         const date = new Date(application.created_at).toLocaleString('ru-RU', {
