@@ -1,10 +1,15 @@
 import { getRapiraBuyDollar, getRapiraSellDollar } from './Rapira.js'
+import { getGrinexBuyDollar } from './Grinex.js'
+import { getInvestingDollar } from './Investing.js'
+import { getXeRates } from './XE.js'
 import cron from 'node-cron'
 
 export class createApi {
     constructor() {
-        this.RapiraBuyUSDT = 0
-        this.RapiraSellUSDT = 0
+        this.GrinexBuyUsdt = 0
+        this.InvestingUsd = 0
+        this.XeEuro = 0
+
         this.timestamp = 0
 
         // Run update every 20 seconds
@@ -21,6 +26,11 @@ export class createApi {
         try {
             this.RapiraBuyUSDT = await getRapiraBuyDollar()
             this.RapiraSellUSDT = await getRapiraSellDollar()
+
+            //this.GrinexBuyUsdt = await getGrinexBuyDollar() //81.62
+            //this.GrinexSellUsdt = await getGrinexSellDollar() //81.62
+            //this.InvestingUsd = await getInvestingDollar() //81.012900
+            //this.XeEuro = (await getXeRates()).XEDollar //1.126734
             
             const date = new Date()
             date.setHours(date.getHours() + 3)

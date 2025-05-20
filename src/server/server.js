@@ -15,13 +15,6 @@ export const app = express()
 // Initialize API
 const api = new createApi();
 
-// Base exchange rates
-const baseRates = {
-    'USDT/RUB': {
-        "askPrice": 81.83,
-        "bidPrice": 81.81
-    },
-}
 
 // Constants for pricing
 const COST_PRICE_COMMISSION = 0.25; // 25 копеек комиссия
