@@ -1,5 +1,5 @@
 import { getRapiraBuyDollar, getRapiraSellDollar } from './Rapira.js'
-import { getGrinexBuyDollar } from './Grinex.js'
+import { getGrinexBuyDollar, getGrinexSellDollar } from './Grinex.js'
 import { getInvestingDollar } from './Investing.js'
 import { getXeRates } from './XE.js'
 import cron from 'node-cron'
@@ -27,8 +27,9 @@ export class createApi {
             this.RapiraBuyUSDT = await getRapiraBuyDollar()
             this.RapiraSellUSDT = await getRapiraSellDollar()
 
-            //this.GrinexBuyUsdt = await getGrinexBuyDollar() //81.62
-            //this.GrinexSellUsdt = await getGrinexSellDollar() //81.62
+            this.GrinexBuyUsdt = await getGrinexBuyDollar() 
+            this.GrinexSellUsdt = await getGrinexSellDollar() 
+
             //this.InvestingUsd = await getInvestingDollar() //81.012900
             //this.XeEuro = (await getXeRates()).XEDollar //1.126734
             

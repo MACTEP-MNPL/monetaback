@@ -23,13 +23,39 @@ const MARGIN_TIER_20K_50K = 2.0;    // +2 рубля для 20-50k
 
 const corsOptions = {
     origin: ['http://localhost:80', 'https://localhost:443', 'http://localhost:5173', 'http://localhost:3000'],
-    //origin: ['https://monetazone.com'],
+    //origin: ['https://monetazone.com', 'https://brodskiyexchange.com'],
     methods: ['POST', 'GET'],
     optionsSuccessStatus: 200
 }
 
 app.use(cors(corsOptions))
 app.use(express.json())
+
+// New endpoint for Grinex rates
+app.get('/rates/grinex', async (req, res) => {
+    try {
+        // Import functions directly to ensure they're available
+        const { GrinexBuyUsdt, GrinexSellUsdt } = api
+        
+        const buyRate = Number(GrinexBuyUsdt).toFixed(2);
+        const sellRate = Number(GrinexSellUsdt).toFixed(2);
+
+        
+        res.status(200).json({
+            success: true,
+            data: {
+                buy: Number(buyRate),
+                sell: Number(sellRate)
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching Grinex rates:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch Grinex rates'
+        });
+    }
+});
 
 app.get('/exchange-rate', async (req, res) => {
     try {
